@@ -11,6 +11,11 @@ class App extends React.Component {
 	}
 
 	render() {
+		const controlStyle = {
+			display: 'inline-block',
+			padding: '16px'
+		};
+
 		return (
 			<div>
 				<Wave
@@ -19,7 +24,7 @@ class App extends React.Component {
 				/>
 
 				<div style={{height: '10vh'}}>
-					<div>
+					<div style={controlStyle}>
 						<label>Speed</label>
 						<input
 							type="range"
@@ -31,7 +36,7 @@ class App extends React.Component {
 						/>
 					</div>
 
-					<div>
+					<div style={controlStyle}>
 						<label>Color</label>
 						<input
 							type="range"
@@ -43,7 +48,7 @@ class App extends React.Component {
 						/>
 					</div>
 
-					<div>
+					<div style={controlStyle}>
 						<label>Height</label>
 						<input
 							type="range"
@@ -55,7 +60,7 @@ class App extends React.Component {
 						/>
 					</div>
 
-					<div>
+					<div style={controlStyle}>
 						<label>Scale</label>
 						<input
 							type="range"

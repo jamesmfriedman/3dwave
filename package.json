@@ -2,6 +2,7 @@
   "name": "wave",
   "version": "0.1.0",
   "private": true,
+  "homepage": "https://jamesmfriedman.github.io/3dwave/",
   "dependencies": {
     "react": "^15.6.1",
     "react-dom": "^15.6.1",
@@ -11,6 +12,7 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
+    "deploy": "npm run build && git add build -f && git commit -m 'running build' && git subtree split -b gh-pages --prefix build && git push origin gh-pages:gh-pages --force && git branch -D gh-pages",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject"
   },

@@ -3,6 +3,64 @@ import PropTypes from 'prop-types';
 import { PerspectiveCamera, Scene, Sprite } from 'three/build/three.module';
 import { CanvasRenderer, SpriteCanvasMaterial } from './three-canvas-renderer';
 
+/**
+ * Wave Component
+ * Makes a 3d wave with a transparent background that conforms to the size of its container
+ * Props
+ *  color: a hex value for a number 0xffffff
+ *  separation: how far apart the orbs are. Cannot be reset during components life.
+ *	amountX: how many orbs on the X axis
+ *	amountY: how many orbs on the Y axis
+ *	speed: how fast the wave is pulsing
+ *	height: how tall the waves are
+ *	scale: a scaling factor for the orbs as they pulse
+ * @export
+ * @class Wave
+ * @extends {React.Component}
+ */
+export class Wave extends React.Component {
+	static propTypes = {
+		color: PropTypes.number,
+		separation: PropTypes.number,
+		height: PropTypes.number,
+		amountX: PropTypes.number,
+		amountY: PropTypes.number,
+		speed: PropTypes.number,
+		scale: PropTypes.number
+	}
+
+	static defaultProps = {
+		color: 0xffffff,
+		separation: 100,
+		height: 50,
+		amountX: 50,
+		amountY: 50,
+		speed: 1,
+		scale: 4
+	}
+
+	componentDidMount() {
+		this.wave = new WaveScene(this.el, {color: this.props.color});
+	}
+
+	componentWillReceiveProps(nextProps) {
+		this.wave.updateOpts(nextProps);
+	}
+
+	componentWillUnmount() {
+		this.wave.destroy();
+	}
+
+	render() {
+		const {color, separation, height, amountX, amountY, speed, ...rest} = this.props;
+		return <div ref={el => (this.el = el)} {...rest}/>;
+	}
+}
+
+/**
+ * Contains the 3JS logic for rendering the wave
+ * @class WaveScene
+ */
 class WaveScene {
 	constructor(el, opts = {}) {
 		this.el = el;
@@ -22,11 +80,12 @@ class WaveScene {
 		this.scene = new Scene();
 		this.particles = [];
 		this.count = 0;
-
+		this.animationFrameId = undefined;
 		this.mouseX = 0;
 		this.mouseY = 0;
 		this.elHalfX = this.el.offsetWidth / 2;
 		this.elHalfY = this.el.offsetHeight / 2;
+		this.registeredListeners = [];
 
 		this.material = new SpriteCanvasMaterial({
 			color: this.opts.color,
@@ -54,11 +113,17 @@ class WaveScene {
 		this.renderer = new CanvasRenderer({alpha: true});
 		this.renderer.setPixelRatio(window.devicePixelRatio);
 		this.renderer.setSize(this.el.offsetWidth, this.el.offsetHeight);
+
 		this.el.appendChild(this.renderer.domElement);
-		this.el.addEventListener('mousemove', evt => this.onDocumentMouseMove(evt), false);
-		this.el.addEventListener('touchstart', evt => this.onDocumentTouch(evt), false);
-		this.el.addEventListener('touchmove', evt => this.onDocumentTouch(evt), false);
-		window.addEventListener('resize', evt => this.onWindowResize(evt), false);
+		this.registerListener(this.el, 'mousemove', evt => this.onDocumentMouseMove(evt));
+		this.registerListener(this.el, 'touchstart', evt => this.onDocumentTouch(evt));
+		this.registerListener(this.el, 'touchmove', evt => this.onDocumentTouch(evt));
+		this.registerListener(window, 'resize', evt => this.onWindowResize(evt));
+	}
+
+	registerListener(obj, evtName, callback) {
+		obj.addEventListener(evtName, callback, false);
+		this.registeredListeners.push(() => obj.removeEventListener(evtName, callback));
 	}
 
 	onWindowResize() {
@@ -83,7 +148,7 @@ class WaveScene {
 	}
 
 	animate() {
-		window.requestAnimationFrame(() => this.animate());
+		this.animationFrameId = window.requestAnimationFrame(() => this.animate());
 		this.render3d();
 	}
 
@@ -115,42 +180,18 @@ class WaveScene {
 	}
 
 	destroy() {
-
-	}
-}
-
-export class Wave extends React.Component {
-	static propTypes = {
-		color: PropTypes.number,
-		separation: PropTypes.number,
-		height: PropTypes.number,
-		amountX: PropTypes.number,
-		amountY: PropTypes.number,
-		speed: PropTypes.number,
-		scale: PropTypes.number
-	}
-
-	static defaultProps = {
-		color: 0xffffff,
-		separation: 100,
-		height: 50,
-		amountX: 50,
-		amountY: 50,
-		speed: 1,
-		scale: 4
-	}
-
-	componentDidMount() {
-		this.wave = new WaveScene(this.el, {color: this.props.color});
-	}
-
-	componentWillReceiveProps(nextProps) {
-		this.wave.updateOpts(nextProps);
-	}
-
-	render() {
-		const {color, separation, height, amountX, amountY, speed, ...rest} = this.props;
-		return <div ref={el => (this.el = el)} {...rest}/>;
+		window.cancelAnimationFrame(this.animationFrameId);
+		this.el.removeChild(this.renderer.domElement);
+		this.particles.forEach(particle => this.scene.remove(particle));
+		this.material.dispose();
+		this.scene.children = [];
+		this.registeredListeners.forEach(unbind => unbind());
+		this.renderer.domElement = null;
+		this.el = null;
+		this.scene = null;
+		this.projector = null;
+		this.camera = null;
+		this.material = null;
 	}
 }
 
