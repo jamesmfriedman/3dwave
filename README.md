@@ -1,5 +1,7 @@
 3D Wave
 -------
+[https://jamesmfriedman.github.io/3dwave/](https://jamesmfriedman.github.io/3dwave/)
+
 Wave Component
 Makes a 3d wave with a transparent background that conforms to the size of its container
 Props
